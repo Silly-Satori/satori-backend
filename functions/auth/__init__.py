@@ -1,1 +1,1 @@
-from .auth import generate_session_token
+from .auth import TokenGenerator

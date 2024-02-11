@@ -3,8 +3,11 @@ import os
 import sys
 
 if __name__ == "__main__":
+    
+    python_path = str(sys.executable)
     print("Initializing...")
     print("Python version: " + sys.version)
+    print("Python executable path: " + python_path)
     
     # change cwd to the directory of this file
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -12,7 +15,7 @@ if __name__ == "__main__":
     
     # install dependencies
     print("Installing dependencies...")
-    os.system("pip install -r requirements.txt --quiet")
+    os.system(sys.executable + " -m pip install -r requirements.txt --quiet")
     print("All dependencies installed.")
     
     # start server

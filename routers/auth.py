@@ -7,7 +7,7 @@ from starlette.responses import HTMLResponse, RedirectResponse
 
 import os
 
-from functions.auth import generate_session_token
+from functions.auth import TokenGenerator
 
 router = APIRouter(
     prefix="/auth",
@@ -23,7 +23,7 @@ oauth.register(
     client_kwargs={
         'scope': 'openid email profile'
     },
-    authorize_state='RandomSatoriKey'
+    authorize_state= os.environ["SECRET_KEY"]
 )
 
 
@@ -58,11 +58,10 @@ async def auth(request: Request):
     # save the user to database
     # TODO: save the user to database
     # Generate session token
-    session_token = generate_session_token()
+    session_token = TokenGenerator.generate_session_token()
     # set the cookie with the session token
     resp = RedirectResponse(url=f'http://localhost:3000/auth/{session_token}')
     resp.set_cookie(key="user", value=user, samesite="lax", secure=True)
-    
 
     return resp
 
