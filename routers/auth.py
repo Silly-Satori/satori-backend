@@ -125,9 +125,14 @@ async def auth(request: Request):
         collection.insert_one(user)
         # remove _id from user
         user.pop("_id")
+        user.pop("created_at")
     else:
         collection.update_one({"_id": user["sub"]}, {"$set": user}, upsert=True)
     
+    # remove the access token and refresh token from the user
+    user.pop("access_token")
+    user.pop("refresh_token")
+      
     # set the cookie with the session token
     resp = RedirectResponse(url=f'http://localhost:3000/auth/{session_token}')
     resp.set_cookie(key="user", value=user, samesite="lax", secure=True)

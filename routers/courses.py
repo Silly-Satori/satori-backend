@@ -19,13 +19,78 @@ router = APIRouter(
     prefix="/courses",
     tags=["Courses"],
     responses={
-        404: {"description": "Not found"},
-        500: {"description": "Internal Server Error"}
+        404: {"description": "Not found @ /courses"},
+        500: {"description": "Internal Server Error @ /courses"}
     }
 )
 
 mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+db = mongo_client["courses"]
+# check if the collection exists and create it if it doesn't
+if "courses" not in db.list_collection_names():
+    db.create_collection("courses")
 
+    # create a validator for the collection
+    validator = {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": ["courseId", "name", "description", "price", "content", "rating", "reviews", "author", "category", "difficulty", "language"],
+            "additionalProperties": True,
+            "properties": {
+                "courseId": {
+                    "bsonType": "string",
+                    "description": "ID of the course"
+                },
+                "name": {
+                    "bsonType": "string",
+                    "description": "Name of the course"
+                },
+                "description": {
+                    "bsonType": "string",
+                    "description": "Description of the course"
+                },
+                "price": {
+                    "bsonType": "int",
+                    "description": "Price of the course"
+                },
+                "content": {
+                    "bsonType": "string",
+                    "description": "Content of the course"
+                },
+                "rating": {
+                    "bsonType": "double",
+                    "description": "Rating of the course"
+                },
+                "reviews": {
+                    "bsonType": "array",
+                    "description": "Reviews of the course"
+                },
+                "author": {
+                    "bsonType": "string",
+                    "description": "Author of the course, _id of the author"
+                },
+                "category": {
+                    "bsonType": "string",
+                    "description": "Category of the course, like 'Web Development', 'Data Science', etc."
+                },
+                "difficulty": {
+                    "bsonType": "string",
+                    "description": "Difficulty of the course, like 'Beginner', 'Intermediate', 'Advanced'"
+                },
+                "language": {
+                    "bsonType": "string",
+                    "description": "Language of the course, like 'English', 'Hindi', etc."
+                }
+            }
+        }
+    }
+    
+    # add the validator to the collection
+    db.command({"collMod": "courses", "validator": validator, "validationLevel": "moderate"})
+
+@router.get("/")
+async def read_root():
+    return {"message": "Courses"}
 
 @router.get("/fetch/{start}")
 async def fetch_courses(start: int, restart_count: int = 0):
@@ -63,7 +128,23 @@ async def fetch_course(course_id: str, restart_count: int = 0):
         await asyncio.sleep(1)
         return await fetch_course(course_id, 1)
     
+    
+# temporary function for course creation
+@router.post("/create/{password}")
+async def create_course(course: dict, password: str):
+    """
+    Create a new course
+    """
+    if password != os.getenv("SECRET_KEY"):
+        return HTTPException(status_code=401, detail="Unauthorized")
+    db = mongo_client["courses"]
+    collection = db["courses"]
+    course_id = collection.insert_one(course)
+    return {"_id": str(course_id.inserted_id)}
+    
 
 def restart_mongo_client():
     global mongo_client
     mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+    
+

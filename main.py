@@ -11,6 +11,7 @@ import datetime as Datetime
 from functions import *
 
 from routers import auth
+from routers import courses
 
 load_dotenv()
 
@@ -43,6 +44,7 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key= os.environ["SECRET_KEY"])
 
 app.include_router(auth.router)
+app.include_router(courses.router)
 
 # mongo = pymongo.MongoClient(os.environ["MONGO_URI"])
 
