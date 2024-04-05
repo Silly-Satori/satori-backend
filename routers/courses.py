@@ -6,6 +6,7 @@ TBD
 
 from fastapi import APIRouter, Depends, HTTPException
 import pymongo
+from functions.auth import TokenGenerator
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from starlette.config import Config
@@ -85,8 +86,12 @@ if "courses" not in db.list_collection_names():
         }
     }
     
-    # add the validator to the collection
-    db.command({"collMod": "courses", "validator": validator, "validationLevel": "moderate"})
+    try:
+        # add the validator to the collection
+        db.command({"collMod": "courses", "validator": validator, "validationLevel": "moderate"})
+    except:
+        db.drop_collection("courses")
+        raise Exception("Failed to create the collection 'courses' with the validator")
 
 @router.get("/")
 async def read_root():
@@ -141,6 +146,22 @@ async def create_course(course: dict, password: str):
     collection = db["courses"]
     course_id = collection.insert_one(course)
     return {"_id": str(course_id.inserted_id)}
+
+# Course creation route
+@router.post("/new")
+async def create_course(data: dict, token: str):
+    """ _description_
+    Create a new course with user authentication
+
+    Args:
+    data (dict): Course data
+    token (str): User token
+    """
+    token = TokenGenerator.decode_jwt_token(token)
+    if token == "invalid_sign" or token == "decode_error":
+        return HTTPException(status_code=401, detail="Unauthorized")
+    
+    # to be implemented
     
 
 def restart_mongo_client():

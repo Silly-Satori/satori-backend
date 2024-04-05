@@ -1,3 +1,42 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -132,9 +171,12 @@ async def auth(request: Request):
     # remove the access token and refresh token from the user
     user.pop("access_token")
     user.pop("refresh_token")
-      
+    user["session_token"] = session_token
+    
+    # convert user to jwt token
+    userjwt = TokenGenerator.generate_jwt_token(user)
     # set the cookie with the session token
-    resp = RedirectResponse(url=f'http://localhost:3000/auth/{session_token}')
+    resp = RedirectResponse(url=f'http://localhost:3000/auth/{userjwt}')
     resp.set_cookie(key="user", value=user, samesite="lax", secure=True)
 
     return resp

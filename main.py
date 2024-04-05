@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 import datetime as Datetime
 from functions import *
 
-from routers import auth
-from routers import courses
+from routers import auth, courses, user, payments
 
 load_dotenv()
 
@@ -45,6 +44,8 @@ app.add_middleware(SessionMiddleware, secret_key= os.environ["SECRET_KEY"])
 
 app.include_router(auth.router)
 app.include_router(courses.router)
+app.include_router(payments.router)
+app.include_router(user.router)
 
 # mongo = pymongo.MongoClient(os.environ["MONGO_URI"])
 
