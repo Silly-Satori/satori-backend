@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 import certifi
+=======
+
+
+>>>>>>> Stashed changes
 from fastapi import APIRouter, Depends, HTTPException
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -60,7 +65,7 @@ oauth.register(
     client_kwargs={
         'scope': 'openid email profile'
     },
-    authorize_state= os.getenv("SECRET_KEY"),
+    authorize_state=os.getenv("SECRET_KEY"),
 )
 
 
@@ -71,7 +76,7 @@ async def login(request: Request):
     print(current_url)
     redirect_uri = str(current_url).replace('login', 'google/callback')
     print("\n"*2)
-    return await oauth.google.authorize_redirect(request, redirect_uri, access_type='offline', prompt = 'consent')
+    return await oauth.google.authorize_redirect(request, redirect_uri, access_type='offline', prompt='consent')
 
 
 @router.get('/google/callback')
@@ -99,7 +104,7 @@ async def auth(request: Request):
     # TODO: save the user to database
     # Generate session token
     session_token = TokenGenerator.generate_session_token()
-    
+
     # test if database is connected or not
     try:
         print(mongo_client.server_info())
@@ -128,13 +133,14 @@ async def auth(request: Request):
         user.pop("_id")
         user.pop("created_at")
     else:
-        collection.update_one({"_id": user["sub"]}, {"$set": user}, upsert=True)
-    
+        collection.update_one({"_id": user["sub"]}, {
+                              "$set": user}, upsert=True)
+
     # remove the access token and refresh token from the user
     user.pop("access_token")
     user.pop("refresh_token")
     user["session_token"] = session_token
-    
+
     # convert user to jwt token
     userjwt = TokenGenerator.generate_jwt_token(user)
     # set the cookie with the session token

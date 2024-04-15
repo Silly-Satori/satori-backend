@@ -43,20 +43,12 @@ if "user_data" not in db.list_collection_names():
     validator = {
         "$jsonSchema": {
             "bsonType": "object",
-            "required": ["sub", "name", "email", "courses", "reviews", "courses_created", "user_type"],
+            "required": ["sub", "courses", "reviews", "courses_created", "user_type"],
             "additionalProperties": True,
             "properties": {
                 "sub": {
                     "bsonType": "string",
                     "description": "user's sub"
-                },
-                "name": {
-                    "bsonType": "string",
-                    "description": "user's name"
-                },
-                "email": {
-                    "bsonType": "string",
-                    "description": "user's email"
                 },
                 "courses": {
                     "bsonType": "array",
@@ -77,9 +69,10 @@ if "user_data" not in db.list_collection_names():
             }
         }
     }
-        
-    db.command({"collMod": "user_data", "validator": validator, "validationLevel": "moderate"})
-        
+
+    db.command({"collMod": "user_data", "validator": validator,
+               "validationLevel": "moderate"})
+
 router = APIRouter(
     prefix="/user",
     tags=["User"],
@@ -89,6 +82,7 @@ router = APIRouter(
     }
 )
 
+
 @router.get('/user_data')
 async def get_user_data(sub: str):
     db = mongo_client["users"]
@@ -97,18 +91,39 @@ async def get_user_data(sub: str):
     if user_data:
         return user_data
     else:
-        return {"error": "User not found"}
-    
+        new_user = {
+            "_id": sub,
+            "sub": sub,
+            "courses": [],
+            "reviews": [],
+            "courses_created": [],
+            "user_type": "student"
+        }
+        collection.insert_one(new_user)
+        return new_user
+
+
+@router.get('/user_data/courses')
+async def get_user_courses(token: str):
+    # decode the jwt token
+    sub = TokenGenerator.decode_jwt_token(token)["sub"]
+    db = mongo_client["users"]
+    # make a request to the /user_data endpoint to get the user data
+    user_data = await get_user_data(sub)  # Add 'await' keyword here
+    if user_data:
+        return user_data["courses"]
+    else:
+        return []
+
+
 @router.post('/info')
 async def get_user_info(request: Request):
     # read the token from the request body
     try:
         data = await request.json()
         token = data["token"]
-        # decode the jwt token 
+        # decode the jwt token
         user_data = TokenGenerator.decode_jwt_token(token)
         return user_data
     except:
         raise HTTPException(status_code=400, detail="Invalid form data")
-    
-    

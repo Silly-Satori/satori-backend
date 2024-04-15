@@ -17,13 +17,15 @@ from starlette.responses import HTMLResponse, RedirectResponse
 import os
 import asyncio
 
+
 router = APIRouter(
     prefix="/courses",
     tags=["Courses"],
     responses={
         404: {"description": "Not found @ /courses"},
         500: {"description": "Internal Server Error @ /courses"}
-    }
+    },
+    
 )
 
 mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
@@ -117,6 +119,27 @@ async def fetch_courses(start: int, restart_count: int = 0):
             return await fetch_courses(start, 1)
         else:
             return HTTPException(status_code=500, detail="Internal Server Error")
+        
+@router.get("/fetch/purchased/{token}")
+async def fetch_purchased_courses(token: str, restart_count: int = 0):
+    """
+    Fetches all courses that the user has purchased
+    """
+    if restart_count > 3:
+        return HTTPException(status_code=500, detail="Internal Server Error")
+    try:
+        token = TokenGenerator.decode_jwt_token(token)
+        if token == "invalid_sign" or token == "decode_error":
+            return HTTPException(status_code=401, detail="Unauthorized")
+        db = mongo_client["courses"]
+        return {
+            "message": "To be implemented",
+            "data": token
+        }
+    except:
+        restart_mongo_client()
+        await asyncio.sleep(1)
+        return await fetch_purchased_courses(token, 1)
         
 
 @router.get("/fetch_id/{course_id}")
