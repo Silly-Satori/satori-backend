@@ -25,6 +25,7 @@ REDIRECT_URI = os.environ["GOOGLE_REDIRECT_URI"]
 class DataModel(BaseModel):
     session: str
     
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
 origins = [
     "http://localhost:3000",
     "http://localhost",
@@ -33,6 +34,7 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    FRONTEND_URL
 ]
 
 app.add_middleware(

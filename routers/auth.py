@@ -139,7 +139,8 @@ async def auth(request: Request):
     # convert user to jwt token
     userjwt = TokenGenerator.generate_jwt_token(user)
     # set the cookie with the session token
-    resp = RedirectResponse(url=f'http://localhost:5173/auth/{userjwt}')
+    frontend = os.getenv("FRONTEND_URL")
+    resp = RedirectResponse(url=f'{frontend}/auth/{userjwt}')
     resp.set_cookie(key="user", value=user, samesite="lax", secure=True)
 
     return resp

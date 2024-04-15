@@ -1,6 +1,9 @@
 import uvicorn
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if __name__ == "__main__":
     
@@ -17,6 +20,9 @@ if __name__ == "__main__":
     print("Installing dependencies...")
     os.system(sys.executable + " -m pip install -r requirements.txt --quiet")
     print("All dependencies installed.")
+    
+    frontend = os.environ.get("FRONTEND_URL")
+    print("Using frontend at", frontend)
     
     # start server
     print("Starting server...")
