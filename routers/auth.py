@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
 import certifi
-=======
-
-
->>>>>>> Stashed changes
 from fastapi import APIRouter, Depends, HTTPException
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -144,7 +139,7 @@ async def auth(request: Request):
     # convert user to jwt token
     userjwt = TokenGenerator.generate_jwt_token(user)
     # set the cookie with the session token
-    resp = RedirectResponse(url=f'http://localhost:3000/auth/{userjwt}')
+    resp = RedirectResponse(url=f'http://localhost:5173/auth/{userjwt}')
     resp.set_cookie(key="user", value=user, samesite="lax", secure=True)
 
     return resp
