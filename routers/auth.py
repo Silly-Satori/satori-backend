@@ -1,42 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import certifi
 from fastapi import APIRouter, Depends, HTTPException
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -53,7 +15,7 @@ from datetime import datetime
 from functions.auth import TokenGenerator
 
 load_dotenv()
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
 db = mongo_client["users"]
 # check if the collection exists
 if "users" not in db.list_collection_names():
@@ -190,5 +152,5 @@ async def logout(request: Request):
 
 def restart_mongo_client():
     global mongo_client
-    mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+    mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
     return True

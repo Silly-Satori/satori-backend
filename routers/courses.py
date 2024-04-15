@@ -7,6 +7,7 @@ TBD
 from fastapi import APIRouter, Depends, HTTPException
 import pymongo
 from functions.auth import TokenGenerator
+import certifi
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from starlette.config import Config
@@ -25,7 +26,7 @@ router = APIRouter(
     }
 )
 
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
 db = mongo_client["courses"]
 # check if the collection exists and create it if it doesn't
 if "courses" not in db.list_collection_names():
@@ -166,6 +167,6 @@ async def create_course(data: dict, token: str):
 
 def restart_mongo_client():
     global mongo_client
-    mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+    mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
     
 

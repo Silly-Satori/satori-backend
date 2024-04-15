@@ -1,12 +1,13 @@
 import pymongo
 import os
 import re
+import certifi
 
 # Login and signup functions
 
 class Login:
     def __init__(self):
-        self.mongo = pymongo.MongoClient(os.getenv("MONGO_URI"))
+        self.mongo = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
         self.db = self.mongo["satori_users"]
     
     def create_user(self, email, username, password):

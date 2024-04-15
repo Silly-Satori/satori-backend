@@ -4,6 +4,7 @@ import pymongo
 import razorpay
 from functions.auth import TokenGenerator
 import time
+import certifi
 
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -27,7 +28,7 @@ router = APIRouter(
     }
 )
 
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
 db = mongo_client["payments"]
 
 rpay_client = razorpay.Client(auth=(os.getenv("RPAY_KEY"), os.getenv("RPAY_SECRET")))

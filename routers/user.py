@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 import pymongo
 from functions.auth import TokenGenerator
+import certifi
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from starlette.config import Config
@@ -19,7 +20,7 @@ router = APIRouter(
     }
 )
 
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
 db = mongo_client["users"]
 
 """ 
