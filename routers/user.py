@@ -114,6 +114,17 @@ async def get_user_courses(token: str):
         return user_data["courses"]
     else:
         return []
+    
+async def add_user_course(sub: str, course_id: str):
+    db = mongo_client["users"]
+    collection = db["user_data"]
+    user_data:list = collection.find_one({"sub": sub})
+    if user_data:
+        user_data["courses"].append(course_id)
+        collection.update_one({"sub": sub}, {"$set": user_data})
+        return user_data
+    else:
+        return None
 
 
 @router.post('/info')
