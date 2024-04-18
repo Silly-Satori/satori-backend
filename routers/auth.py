@@ -66,7 +66,11 @@ oauth.register(
 
 @router.get('/login')
 async def login(request: Request):
-    # redirect to google/callback
+    """Redirects to Google OAuth login page
+    
+    Returns:
+        RedirectResponse: Redirects to Google OAuth login page
+    """
     current_url = request.url
     print(current_url)
     redirect_uri = str(current_url).replace('login', 'google/callback')
@@ -76,6 +80,14 @@ async def login(request: Request):
 
 @router.get('/google/callback')
 async def auth(request: Request):
+    """
+    Callback function for Google OAuth
+    
+    Args:
+        request (Request): Request object
+        
+    Returns:
+        RedirectResponse: Redirects to the frontend with the user data"""
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
@@ -148,11 +160,13 @@ async def auth(request: Request):
 
 @router.get('/logout')
 async def logout(request: Request):
+    """Logs out the user"""
     request.session.pop('user', None)
     return RedirectResponse(url='/')
 
 
 def restart_mongo_client():
+    """Restarts the MongoDB client"""
     global mongo_client
     mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
     return True

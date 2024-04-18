@@ -85,6 +85,7 @@ router = APIRouter(
 
 @router.get('/user_data')
 async def get_user_data(sub: str):
+    """Get the user data from the database"""
     db = mongo_client["users"]
     collection = db["user_data"]
     user_data = collection.find_one({"sub": sub})
@@ -105,6 +106,7 @@ async def get_user_data(sub: str):
 
 @router.get('/user_data/courses')
 async def get_user_courses(token: str):
+    """Get the courses the user has purchased"""
     # decode the jwt token
     sub = TokenGenerator.decode_jwt_token(token)["sub"]
     db = mongo_client["users"]
@@ -116,6 +118,7 @@ async def get_user_courses(token: str):
         return []
     
 async def add_user_course(sub: str, course_id: str):
+    """Add a course to the user's list of purchased courses, no route"""
     db = mongo_client["users"]
     collection = db["user_data"]
     user_data:list = collection.find_one({"sub": sub})
@@ -129,6 +132,7 @@ async def add_user_course(sub: str, course_id: str):
 
 @router.post('/info')
 async def get_user_info(request: Request):
+    """Get the user info from the jwt token"""
     # read the token from the request body
     try:
         data = await request.json()
