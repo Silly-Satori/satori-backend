@@ -246,14 +246,30 @@ async def get_course_content(request: Request, course_id: str):
     
     
 # temporary function for course creation
-@router.post("/create")
-async def create_course(course_data: dict):
+@router.post("/create/")
+async def create_course(request: Request):
     """
-    Create a new course without user authentication
+    Create a new course with user data
 
     Args:
     course_data (dict): Course data
     """
+    course_data:dict
+    try:
+        course_data = await request.json()
+    except:
+        course_data = await request.form()
+        
+    token = course_data.get("token")
+    if token is None:
+        return HTTPException(status_code=400, detail="Invalid form data")
+    course_data.pop("token")
+    user = TokenGenerator.decode_jwt_token(token)
+    if user == "invalid_sign" or user == "decode_error":
+        return HTTPException(status_code=401, detail="Unauthorized")
+    
+    course_data["author"] = user["sub"]
+    
     try:
         
         course_data["price"] = int(course_data["price"])
