@@ -141,6 +141,7 @@ if "course_content" not in db.list_collection_names():
 
 @router.get("/")
 async def read_root():
+    """Default route for the courses router, nothing special here, unused"""
     return {"message": "Courses"}
 
 @router.get("/fetch/{start}")

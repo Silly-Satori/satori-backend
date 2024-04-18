@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 import datetime as Datetime
 from functions import *
+import json
 
 from routers import auth, courses, user, payments
 
@@ -79,10 +80,40 @@ async def post(request: Request, DataModel: DataModel):
     request.session["mod"] = DataModel.session
     return "hello"
 
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>My Project - ReDoc</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <style data-styled="" data-styled-version="4.4.1"></style>
+</head>
+<body>
+    <div id="redoc-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"> </script>
+    <script>
+        var spec = %s;
+        Redoc.init(spec, {}, document.getElementById("redoc-container"));
+    </script>
+</body>
+</html>
 """
-@app.get("/google_auth")
-async def google_auth(token: str):
-    return auth.Google(CLIENT_ID).get_user(token)
-"""
+@app.get("/docs/{password}")
+async def generate_docs(password: str):
+    if password != os.environ["SECRET_KEY"]:
+        return {"message": "Invalid password"}
+    with open(f"docs.html", "w") as fd:
+        # update the docs.html file on whenever a get request is made to the /docs endpoint with passwword
+        print(HTML_TEMPLATE % json.dumps(app.openapi()), file=fd)
+    
+    return {"message": "Docs updated"}
 
 

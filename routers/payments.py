@@ -49,6 +49,8 @@ async def root():
 
 @router.get("/create-test")
 async def create_payment():
+    """Create a test payment, for testing purposes
+    Not to be used for front-end"""
     payment = rpay_client.order.create({
         "amount": 500,
         "currency": "INR",
@@ -66,7 +68,8 @@ async def create_payment():
 
 @router.post("/purchase/{course_id}")
 async def purchase_course(course_id: str, request: Request):
-    """Purchase a course"""
+    """Purchase a course, given the course_id
+    Returns a payment object, which can be used to show the payment modal in the front-end"""
     # request is a form data
     body: dict = {}
     try:
@@ -100,7 +103,11 @@ async def purchase_course(course_id: str, request: Request):
 
 @router.post("/verify")
 async def verify_payment(request: Request):
-    """Verify a payment"""
+    """
+    Callback function for verifying the payment
+    Cryptographically verifies the payment by comparing the signature with our own digest
+    If the payment is verified, the course is added to the user's account
+    """
     body = {}
     try:
         body = await request.json()
