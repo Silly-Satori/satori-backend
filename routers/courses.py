@@ -17,6 +17,8 @@ from starlette.responses import HTMLResponse, RedirectResponse
 import os
 import asyncio
 
+from .user import get_user_courses
+
 
 router = APIRouter(
     prefix="/courses",
@@ -96,6 +98,47 @@ if "courses" not in db.list_collection_names():
         db.drop_collection("courses")
         raise Exception("Failed to create the collection 'courses' with the validator")
 
+if "course_content" not in db.list_collection_names():
+    db.create_collection("course_content")
+
+    # create a validator for the collection
+    validator = {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": ["courseId", "videos", "resources", "quizzes", "other"],
+            "additionalProperties": True,
+            "properties": {
+                "courseId": {
+                    "bsonType": "string",
+                    "description": "ID of the course"
+                },
+                "videos": {
+                    "bsonType": "array",
+                    "description": "List of video links"
+                },
+                "resources": {
+                    "bsonType": "array",
+                    "description": "List of resources"
+                },
+                "quizzes": {
+                    "bsonType": "array",
+                    "description": "List of quizzes"
+                },
+                "other": {
+                    "bsonType": "array",
+                    "description": "List of other resources"
+                }
+            }
+        }
+    }
+
+    try:
+        db.command({"collMod": "course_content", "validator": validator, "validationLevel": "moderate"})
+    except:
+        db.drop_collection("course_content")
+        raise Exception("Failed to create the collection 'course_content' with the validator")
+
+
 @router.get("/")
 async def read_root():
     return {"message": "Courses"}
@@ -156,6 +199,49 @@ async def fetch_course(course_id: str, restart_count: int = 0):
         restart_mongo_client()
         await asyncio.sleep(1)
         return await fetch_course(course_id, 1)
+    
+
+@router.post("/get_content/{course_id}")
+async def get_course_content(request: Request, course_id: str):
+    """
+    Fetches the content of a course after checking if the user is enrolled in the course
+    """
+    data:dict
+    try:
+        data = await request.json()
+    except:
+        data = await request.form()
+
+
+    token = data.get("token")
+    if token is None:
+        return HTTPException(status_code=400, detail="Invalid form data")
+    user  = TokenGenerator.decode_jwt_token(token)
+    if user == "invalid_sign" or user == "decode_error":
+        return HTTPException(status_code=401, detail="Unauthorized")
+    
+    # get user purchased courses
+    user_courses = await get_user_courses(token)
+    print(user_courses)
+
+    if course_id not in user_courses:
+        return HTTPException(status_code=401, detail="Unauthorized")
+    
+    course_db = mongo_client["courses"]["courses"]
+    content_db = mongo_client["courses"]["course_content"]
+    course = course_db.find_one({"_id": course_id})
+    content = content_db.find_one({"_id": course_id})
+    if content is None and course is not None:
+        # create a new content document
+        content = {
+            "_id": course_id,
+            "videos": [],
+            "resources": [],
+            "quizzes": [],
+            "other": []
+        }
+        content_db.insert_one(content)
+    return content
     
     
 # temporary function for course creation
