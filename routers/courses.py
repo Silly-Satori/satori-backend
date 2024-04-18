@@ -245,34 +245,31 @@ async def get_course_content(request: Request, course_id: str):
     
     
 # temporary function for course creation
-@router.post("/create/{password}")
-async def create_course(course: dict, password: str):
+@router.post("/create")
+async def create_course(course_data: dict):
     """
-    Create a new course
-    """
-    if password != os.getenv("SECRET_KEY"):
-        return HTTPException(status_code=401, detail="Unauthorized")
-    db = mongo_client["courses"]
-    collection = db["courses"]
-    course_id = collection.insert_one(course)
-    return {"_id": str(course_id.inserted_id)}
-
-# Course creation route
-@router.post("/new")
-async def create_course(data: dict, token: str):
-    """ _description_
-    Create a new course with user authentication
+    Create a new course without user authentication
 
     Args:
-    data (dict): Course data
-    token (str): User token
+    course_data (dict): Course data
     """
-    token = TokenGenerator.decode_jwt_token(token)
-    if token == "invalid_sign" or token == "decode_error":
-        return HTTPException(status_code=401, detail="Unauthorized")
-    
-    # to be implemented
-    
+    try:
+        
+        course_data["price"] = int(course_data["price"])
+        course_data["rating"] = float(course_data["rating"])
+        course_data["courseId"] = str(course_data["courseId"])
+        if course_data["courseId"].isdigit():
+            course_data["_id"] = str(course_data["courseId"])
+        else:
+            course_data["_id"] = str(course_data["courseId"]).replace(" ", "_")
+        db = mongo_client["courses"]
+        collection = db["courses"]
+        inserted_course = collection.insert_one(course_data)
+        return {"success": True, "message": "Course created successfully", "course_id": str(inserted_course.inserted_id)}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+        
 
 def restart_mongo_client():
     global mongo_client
