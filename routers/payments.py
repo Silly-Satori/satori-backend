@@ -6,7 +6,8 @@ import razorpay
 from functions.auth import TokenGenerator
 import time
 import certifi
-import hmac, hashlib
+import hmac
+import hashlib
 
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -31,16 +32,20 @@ router = APIRouter(
     }
 )
 
-mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"), tlsCAFile= certifi.where())
+mongo_client = pymongo.MongoClient(
+    os.getenv("MONGO_URI"), tlsCAFile=certifi.where())
 db = mongo_client["payments"]
 course_db = mongo_client["courses"]["courses"]
 
-rpay_client = razorpay.Client(auth=(os.getenv("RPAY_KEY"), os.getenv("RPAY_SECRET")))
+rpay_client = razorpay.Client(
+    auth=(os.getenv("RPAY_KEY"), os.getenv("RPAY_SECRET")))
+
 
 @router.get("/")
 async def root():
     """Returns a simple message"""
     return {"message": "Payments API"}
+
 
 @router.get("/create-test")
 async def create_payment():
@@ -48,14 +53,16 @@ async def create_payment():
         "amount": 500,
         "currency": "INR",
         "receipt": "test_order"+str(int(time.time())),
-        "method": "upi",
+        # "method": "upi",
+
         "notes": {
             "age": "24",
             "name": "test"
         }
     })
-    
+
     return payment
+
 
 @router.post("/purchase/{course_id}")
 async def purchase_course(course_id: str, request: Request):
@@ -67,7 +74,7 @@ async def purchase_course(course_id: str, request: Request):
     except:
         body = await request.form()
     token = body.get("token")
-    user =TokenGenerator.decode_jwt_token(token)
+    user = TokenGenerator.decode_jwt_token(token)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid Token")
     # Check if the course exists
@@ -84,7 +91,6 @@ async def purchase_course(course_id: str, request: Request):
         "amount": course["price"] * 100,
         "currency": "INR",
         "receipt": "order_"+str(int(time.time())),
-        "method": "upi",
         "notes": {
             "course_id": course_id,
             "user_id": user["sub"]
@@ -104,7 +110,7 @@ async def verify_payment(request: Request):
     razorpayPaymentId = body.get("razorpayPaymentId")
     razorpayOrderId = body.get("razorpayOrderId")
     razorpaySignature = body.get("razorpaySignature")
-    notes:dict = body.get("notes")
+    notes: dict = body.get("notes")
     token = TokenGenerator.decode_jwt_token(body.get("token"))
     print(token)
     print(notes)
@@ -115,7 +121,8 @@ async def verify_payment(request: Request):
         # digest = hmac_sha256(orderCreationId + "|" + razorpayPaymentId, secret)
         secret = os.getenv("RPAY_SECRET")
         message = f"{orderCreationId}|{razorpayPaymentId}".encode("utf-8")
-        digest = hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
+        digest = hmac.new(secret.encode("utf-8"), message,
+                          hashlib.sha256).hexdigest()
 
         # Comparing our digest with the actual signature
         if digest != razorpaySignature:
@@ -123,14 +130,14 @@ async def verify_payment(request: Request):
 
         # THE PAYMENT IS LEGIT & VERIFIED
         # YOU CAN SAVE THE DETAILS IN YOUR DATABASE IF YOU WANT
-        
-        #get course id from notes
+
+        # get course id from notes
         course_id = notes.get("course_id")
         user_id = notes.get("user_id")
-        
+
         await add_user_course(user_id, course_id)
         print("Course added to user")
-        
+
 
         return {
             "msg": "success",
