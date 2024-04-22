@@ -248,16 +248,29 @@ async def get_course_overview(course_id: str):
 
     # no need to check if the user is enrolled in the course
     # as the overview of the course is public
-    course_db = mongo_client["courses"]["course_content"]
-    course:dict = course_db.find_one({"_id": course_id})
+    course_db = mongo_client["courses"]["courses"]
+    content_db = mongo_client["courses"]["course_content"]
+    course = course_db.find_one({"_id": course_id})
+    content = content_db.find_one({"_id": course_id})
+    if content is None and course is not None:
+        # create a new content document
+        content = {
+            "_id": course_id,
+            "videos": [],
+            "resources": [],
+            "quizzes": [],
+            "other": []
+        }
+        content_db.insert_one(content)
+    
     # now remove the video urls from the course content
     # as they are not needed in the overview
-    videos = course.get("videos")
+    videos = content.get("videos")
     for video in videos:
         if "videoId" in video:
             video.pop("videoId")
         
-    return course
+    return content
 
     
     
